@@ -1137,9 +1137,12 @@ class ConfigTest(unittest.TestCase):
         details = config.ConfigDetails('.', [base_file, override_file])
         service_dicts = config.load(details).services
         svc_volumes = map(lambda v: v.repr(), service_dicts[0]['volumes'])
-        assert sorted(svc_volumes) == sorted(
-            ['/anonymous', '/c:/b:rw', 'vol:/x:ro']
-        )
+        for vol in svc_volumes:
+            assert vol in [
+                '/anonymous',
+                '/c:/b:rw',
+                {'source': 'vol', 'target': '/x', 'type': 'volume', 'read_only': True}
+            ]
 
     @mock.patch.dict(os.environ)
     def test_volume_mode_override(self):

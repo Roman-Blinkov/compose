@@ -792,8 +792,13 @@ class Service(object):
         override_options['binds'] = binds
         container_options['environment'].update(affinity)
 
-        container_options['volumes'] = dict(
-            (v.internal, {}) for v in container_options.get('volumes') or {})
+        if 'volumes' in container_options:
+            container_volumes = [
+                v for v in container_options.get('volumes') if isinstance(v, VolumeSpec)
+            ]
+            container_mounts = [v for v in container_options.get('volumes') if isinstance(v, MountSpec)]
+            container_options['volumes'] = dict((v.internal, {}) for v in container_volumes or {})
+            override_options['mounts'] = [build_mount(v) for v in container_mounts] or None
 
         secret_volumes = self.get_secret_volumes()
         if secret_volumes:
@@ -803,7 +808,8 @@ class Service(object):
                     (v.target, {}) for v in secret_volumes
                 )
             else:
-                override_options['mounts'] = [build_mount(v) for v in secret_volumes]
+                override_options['mounts'] = override_options.get('mounts') or []
+                override_options['mounts'].extend([build_mount(v) for v in secret_volumes])
 
         container_options['image'] = self.image_name
 
