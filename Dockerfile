@@ -1,4 +1,4 @@
-FROM debian:wheezy
+FROM docker:dind
 
 RUN set -ex; \
     apt-get update -qq; \
